@@ -1,0 +1,180 @@
+@page "/places"
+@inject HttpClient Http
+
+<PageTitle>Places</PageTitle>
+
+<h1>Places</h1>
+
+<div class="mb-3">
+    <button class="btn btn-primary" @onclick="ToggleAddForm">
+        @(showAddForm ? "Cancel" : "Add Place")
+    </button>
+</div>
+
+@if (showAddForm)
+{
+    <div class="card mb-4">
+        <div class="card-header">Add New Place</div>
+        <div class="card-body">
+            <div class="mb-3">
+                <label class="form-label">Description</label>
+                <input type="text" class="form-control" @bind="newPlaceDescr" @bind:event="oninput" placeholder="e.g., Living Room Bookshelf" />
+            </div>
+            <button type="button" class="btn btn-success" @onclick="AddPlace" disabled="@isSubmitting">
+                @(isSubmitting ? "Adding..." : "Add Place")
+            </button>
+        </div>
+    </div>
+}
+
+@if (!string.IsNullOrEmpty(errorMessage))
+{
+    <div class="alert alert-danger">@errorMessage</div>
+}
+
+@if (!string.IsNullOrEmpty(successMessage))
+{
+    <div class="alert alert-success">@successMessage</div>
+}
+
+@if (places == null)
+{
+    <p><em>Loading...</em></p>
+}
+else if (!places.Any())
+{
+    <p>No places found. Add one above!</p>
+}
+else
+{
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Description</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var place in places)
+            {
+                <tr>
+                    <td>@place.Id</td>
+                    <td>@place.Descr</td>
+                    <td>
+                        <button class="btn btn-sm btn-danger" @onclick="() => DeletePlace(place.Id)">Delete</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private List<PlaceDto>? places;
+    private string newPlaceDescr = string.Empty;
+    private bool showAddForm = false;
+    private bool isSubmitting = false;
+    private string? errorMessage;
+    private string? successMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadPlaces();
+    }
+
+    private async Task LoadPlaces()
+    {
+        try
+        {
+            errorMessage = null;
+            var result = await Http.GetFromJsonAsync<PlaceDto[]>("api/places");
+            places = result?.ToList() ?? new List<PlaceDto>();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error loading places: {ex.Message}";
+            places = new List<PlaceDto>();
+        }
+    }
+
+    private void ToggleAddForm()
+    {
+        showAddForm = !showAddForm;
+        successMessage = null;
+        errorMessage = null;
+        if (showAddForm)
+        {
+            newPlaceDescr = string.Empty;
+        }
+    }
+
+    private async Task AddPlace()
+    {
+        if (string.IsNullOrWhiteSpace(newPlaceDescr))
+        {
+            errorMessage = "Please enter a description";
+            return;
+        }
+
+        try
+        {
+            isSubmitting = true;
+            errorMessage = null;
+            successMessage = null;
+            
+            var payload = new { Descr = newPlaceDescr };
+            var response = await Http.PostAsJsonAsync("api/places", payload);
+            
+            if (response.IsSuccessStatusCode)
+            {
+                successMessage = $"Place '{newPlaceDescr}' added successfully!";
+                showAddForm = false;
+                newPlaceDescr = string.Empty;
+                await LoadPlaces();
+            }
+            else
+            {
+                var content = await response.Content.ReadAsStringAsync();
+                errorMessage = $"Error adding place: {response.StatusCode} - {content}";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error adding place: {ex.Message}";
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+
+    private async Task DeletePlace(int id)
+    {
+        try
+        {
+            errorMessage = null;
+            successMessage = null;
+            var response = await Http.DeleteAsync($"api/places/{id}");
+            if (response.IsSuccessStatusCode)
+            {
+                successMessage = "Place deleted successfully!";
+                await LoadPlaces();
+            }
+            else
+            {
+                errorMessage = $"Error deleting place: {response.StatusCode}";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error deleting place: {ex.Message}";
+        }
+    }
+
+    public class PlaceDto
+    {
+        public int Id { get; set; }
+        public string Descr { get; set; } = string.Empty;
+    }
+}

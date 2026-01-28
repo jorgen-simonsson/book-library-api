@@ -1,0 +1,274 @@
+@page "/books"
+@inject HttpClient Http
+
+<PageTitle>Books</PageTitle>
+
+<h1>Books</h1>
+
+<div class="mb-3">
+    <button class="btn btn-primary" @onclick="ToggleAddForm">
+        @(showAddForm ? "Cancel" : "Add Book")
+    </button>
+</div>
+
+@if (showAddForm)
+{
+    <div class="card mb-4">
+        <div class="card-header">Add New Book</div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Title *</label>
+                    <input type="text" class="form-control" @bind="newTitle" @bind:event="oninput" />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Author</label>
+                    <input type="text" class="form-control" @bind="newAuthor" @bind:event="oninput" />
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">ISBN</label>
+                    <input type="text" class="form-control" @bind="newIsbn" @bind:event="oninput" />
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">Publisher</label>
+                    <input type="text" class="form-control" @bind="newPublisher" @bind:event="oninput" />
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">Published Year</label>
+                    <input type="text" class="form-control" @bind="newPublishedYear" @bind:event="oninput" />
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">Page Count</label>
+                    <input type="number" class="form-control" @bind="newPageCount" />
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">Location</label>
+                    <select class="form-select" @bind="newPlaceId">
+                        <option value="">-- Select Location --</option>
+                        @if (places != null)
+                        {
+                            @foreach (var place in places)
+                            {
+                                <option value="@place.Id">@place.Descr</option>
+                            }
+                        }
+                    </select>
+                </div>
+            </div>
+            <button type="button" class="btn btn-success" @onclick="AddBook" disabled="@isSubmitting">
+                @(isSubmitting ? "Adding..." : "Add Book")
+            </button>
+        </div>
+    </div>
+}
+
+@if (!string.IsNullOrEmpty(errorMessage))
+{
+    <div class="alert alert-danger">@errorMessage</div>
+}
+
+@if (!string.IsNullOrEmpty(successMessage))
+{
+    <div class="alert alert-success">@successMessage</div>
+}
+
+@if (books == null)
+{
+    <p><em>Loading...</em></p>
+}
+else if (!books.Any())
+{
+    <p>No books found. Add one above!</p>
+}
+else
+{
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Title</th>
+                <th>Author</th>
+                <th>ISBN</th>
+                <th>Publisher</th>
+                <th>Year</th>
+                <th>Pages</th>
+                <th>Location</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var book in books)
+            {
+                <tr>
+                    <td>@book.Title</td>
+                    <td>@book.Author</td>
+                    <td>@book.Isbn</td>
+                    <td>@book.Publisher</td>
+                    <td>@book.PublishedYear</td>
+                    <td>@book.PageCount</td>
+                    <td>@book.PlaceDescr</td>
+                    <td>
+                        <button class="btn btn-sm btn-danger" @onclick="() => DeleteBook(book.Id)">Delete</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private List<BookDto>? books;
+    private List<PlaceDto>? places;
+    private bool showAddForm = false;
+    private bool isSubmitting = false;
+    private string? errorMessage;
+    private string? successMessage;
+    
+    private string newTitle = string.Empty;
+    private string newAuthor = string.Empty;
+    private string newIsbn = string.Empty;
+    private string newPublisher = string.Empty;
+    private string newPublishedYear = string.Empty;
+    private int newPageCount = 0;
+    private int? newPlaceId;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        try
+        {
+            errorMessage = null;
+            var booksResult = await Http.GetFromJsonAsync<BookDto[]>("api/books");
+            var placesResult = await Http.GetFromJsonAsync<PlaceDto[]>("api/places");
+            books = booksResult?.ToList() ?? new List<BookDto>();
+            places = placesResult?.ToList() ?? new List<PlaceDto>();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error loading data: {ex.Message}";
+            books = new List<BookDto>();
+            places = new List<PlaceDto>();
+        }
+    }
+
+    private void ToggleAddForm()
+    {
+        showAddForm = !showAddForm;
+        successMessage = null;
+        errorMessage = null;
+        if (showAddForm)
+        {
+            ResetForm();
+        }
+    }
+
+    private void ResetForm()
+    {
+        newTitle = string.Empty;
+        newAuthor = string.Empty;
+        newIsbn = string.Empty;
+        newPublisher = string.Empty;
+        newPublishedYear = string.Empty;
+        newPageCount = 0;
+        newPlaceId = null;
+    }
+
+    private async Task AddBook()
+    {
+        if (string.IsNullOrWhiteSpace(newTitle))
+        {
+            errorMessage = "Please enter a title";
+            return;
+        }
+
+        try
+        {
+            isSubmitting = true;
+            errorMessage = null;
+            successMessage = null;
+            
+            var payload = new 
+            {
+                Isbn = newIsbn,
+                Title = newTitle,
+                Author = newAuthor,
+                Publisher = newPublisher,
+                PublishedYear = newPublishedYear,
+                PageCount = newPageCount,
+                PlaceId = newPlaceId
+            };
+            
+            var response = await Http.PostAsJsonAsync("api/books", payload);
+            
+            if (response.IsSuccessStatusCode)
+            {
+                successMessage = $"Book '{newTitle}' added successfully!";
+                showAddForm = false;
+                ResetForm();
+                await LoadData();
+            }
+            else
+            {
+                var content = await response.Content.ReadAsStringAsync();
+                errorMessage = $"Error adding book: {response.StatusCode} - {content}";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error adding book: {ex.Message}";
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+
+    private async Task DeleteBook(int id)
+    {
+        try
+        {
+            errorMessage = null;
+            successMessage = null;
+            var response = await Http.DeleteAsync($"api/books/{id}");
+            if (response.IsSuccessStatusCode)
+            {
+                successMessage = "Book deleted successfully!";
+                await LoadData();
+            }
+            else
+            {
+                errorMessage = $"Error deleting book: {response.StatusCode}";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error deleting book: {ex.Message}";
+        }
+    }
+
+    public class BookDto
+    {
+        public int Id { get; set; }
+        public string Isbn { get; set; } = string.Empty;
+        public string Title { get; set; } = string.Empty;
+        public string Author { get; set; } = string.Empty;
+        public string Publisher { get; set; } = string.Empty;
+        public string PublishedYear { get; set; } = string.Empty;
+        public int PageCount { get; set; }
+        public int? PlaceId { get; set; }
+        public string? PlaceDescr { get; set; }
+    }
+
+    public class PlaceDto
+    {
+        public int Id { get; set; }
+        public string Descr { get; set; } = string.Empty;
+    }
+}

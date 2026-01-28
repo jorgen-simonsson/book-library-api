@@ -1,0 +1,31 @@
+Scaffold a .net 10 backend using clean architechture
+Include crud endpoints for the db tables
+Include a Swagger interface
+Include docker file
+Include db migration to set up postgress tables
+Include a compose.yaml that runs the api and a postgres database container
+
+
+Database:
+
+Tables
+
+books
+-----
+id 
+isbn (string)
+title (string)
+author (string)
+publisher (string)
+published_year (string)
+pagecount (int)
+place_id (points into places)
+api_info (jsonb)
+
+places
+------
+id
+descr
+
+
+
