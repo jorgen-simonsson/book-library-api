@@ -111,12 +111,38 @@ else
                     <td>@book.PageCount</td>
                     <td>@book.PlaceDescr</td>
                     <td>
+                        @if (!string.IsNullOrEmpty(book.ApiInfo))
+                        {
+                            <button class="btn btn-sm btn-info me-1" @onclick="() => ShowApiInfo(book)" title="View API Info">
+                                <span>📋</span>
+                            </button>
+                        }
                         <button class="btn btn-sm btn-danger" @onclick="() => DeleteBook(book.Id)">Delete</button>
                     </td>
                 </tr>
             }
         </tbody>
     </table>
+}
+
+@if (showApiInfoModal && selectedBook != null)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">API Info - @selectedBook.Title</h5>
+                    <button type="button" class="btn-close" @onclick="CloseApiInfoModal"></button>
+                </div>
+                <div class="modal-body">
+                    <pre style="background-color: #f8f9fa; padding: 1rem; border-radius: 0.25rem; max-height: 400px; overflow-y: auto;"><code>@FormatJson(selectedBook.ApiInfo)</code></pre>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="CloseApiInfoModal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
 }
 
 @code {
@@ -126,6 +152,8 @@ else
     private bool isSubmitting = false;
     private string? errorMessage;
     private string? successMessage;
+    private bool showApiInfoModal = false;
+    private BookDto? selectedBook;
     
     private string newTitle = string.Empty;
     private string newAuthor = string.Empty;
@@ -263,6 +291,7 @@ else
         public string PublishedYear { get; set; } = string.Empty;
         public int PageCount { get; set; }
         public int? PlaceId { get; set; }
+        public string? ApiInfo { get; set; }
         public string? PlaceDescr { get; set; }
     }
 
@@ -270,5 +299,36 @@ else
     {
         public int Id { get; set; }
         public string Descr { get; set; } = string.Empty;
+    }
+
+    private void ShowApiInfo(BookDto book)
+    {
+        selectedBook = book;
+        showApiInfoModal = true;
+    }
+
+    private void CloseApiInfoModal()
+    {
+        showApiInfoModal = false;
+        selectedBook = null;
+    }
+
+    private string FormatJson(string? json)
+    {
+        if (string.IsNullOrEmpty(json))
+            return "No data";
+        
+        try
+        {
+            var obj = System.Text.Json.JsonSerializer.Deserialize<System.Text.Json.JsonElement>(json);
+            return System.Text.Json.JsonSerializer.Serialize(obj, new System.Text.Json.JsonSerializerOptions 
+            { 
+                WriteIndented = true 
+            });
+        }
+        catch
+        {
+            return json;
+        }
     }
 }

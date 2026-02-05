@@ -26,6 +26,12 @@ public class BookService : IBookService
         return book == null ? null : MapToDto(book);
     }
 
+    public async Task<BookDto?> GetBookByIsbnAsync(string isbn, CancellationToken cancellationToken = default)
+    {
+        var book = await _bookRepository.GetByIsbnAsync(isbn, cancellationToken);
+        return book == null ? null : MapToDto(book);
+    }
+
     public async Task<BookDto> CreateBookAsync(CreateBookDto createBookDto, CancellationToken cancellationToken = default)
     {
         var book = new Book

@@ -41,7 +41,8 @@ docker compose up -d
 Access the applications:
 - **Web Frontend**: http://localhost:8081
 - **API Swagger UI**: http://localhost:8080/swagger
-- **API Base URL**: http://localhost:8080
+- **API Base URL (HTTP)**: http://localhost:8080
+- **API Base URL (HTTPS)**: https://localhost:8443
 
 To stop the services:
 ```bash
@@ -94,6 +95,7 @@ book-library-api/
 |--------|----------|-------------|
 | GET | /api/books | Get all books |
 | GET | /api/books/{id} | Get a book by ID |
+| GET | /api/books/isbn/{isbn} | Get a book by ISBN |
 | POST | /api/books | Create a new book |
 | PUT | /api/books/{id} | Update a book |
 | DELETE | /api/books/{id} | Delete a book |
@@ -143,7 +145,8 @@ dotnet ef migrations add MigrationName --startup-project ../BookLibrary.Api
 | Service | Port | Description |
 |---------|------|-------------|
 | web | 8081 | Blazor Server frontend |
-| api | 8080 | REST API with Swagger |
+| api | 8080 | REST API (HTTP) with Swagger |
+| api | 8443 | REST API (HTTPS) |
 | db | 5433 | PostgreSQL database |
 
 ## Environment Variables

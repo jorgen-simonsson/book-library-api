@@ -28,6 +28,13 @@ public class BookRepository : IBookRepository
             .FirstOrDefaultAsync(b => b.Id == id, cancellationToken);
     }
 
+    public async Task<Book?> GetByIsbnAsync(string isbn, CancellationToken cancellationToken = default)
+    {
+        return await _context.Books
+            .Include(b => b.Place)
+            .FirstOrDefaultAsync(b => b.Isbn == isbn, cancellationToken);
+    }
+
     public async Task<Book> AddAsync(Book book, CancellationToken cancellationToken = default)
     {
         _context.Books.Add(book);

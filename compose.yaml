@@ -5,9 +5,12 @@ services:
       dockerfile: src/BookLibrary.Api/Dockerfile
     ports:
       - "8080:8080"
+      - "8443:8443"
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
       - ConnectionStrings__DefaultConnection=Host=db;Port=5432;Database=booklibrary;Username=postgres;Password=postgres
+    volumes:
+      - ./certs:/https:ro
     depends_on:
       db:
         condition: service_healthy

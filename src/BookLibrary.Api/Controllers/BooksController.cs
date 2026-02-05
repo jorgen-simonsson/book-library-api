@@ -29,12 +29,26 @@ public class BooksController : ControllerBase
     /// <summary>
     /// Get a book by ID
     /// </summary>
-    [HttpGet("{id}")]
+    [HttpGet("{id:int}")]
     [ProducesResponseType(typeof(BookDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<BookDto>> GetById(int id, CancellationToken cancellationToken)
     {
         var book = await _bookService.GetBookByIdAsync(id, cancellationToken);
+        if (book == null)
+            return NotFound();
+        return Ok(book);
+    }
+
+    /// <summary>
+    /// Get a book by ISBN
+    /// </summary>
+    [HttpGet("isbn/{isbn}")]
+    [ProducesResponseType(typeof(BookDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<BookDto>> GetByIsbn(string isbn, CancellationToken cancellationToken)
+    {
+        var book = await _bookService.GetBookByIsbnAsync(isbn, cancellationToken);
         if (book == null)
             return NotFound();
         return Ok(book);
