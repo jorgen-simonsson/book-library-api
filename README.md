@@ -4,11 +4,13 @@ A full-stack .NET 10 application for managing a personal book library, featuring
 
 ## Features
 
-- 📚 **Book Management** - Add, edit, view, and delete books
+- 📚 **Book Management** - Add, view, and delete books with details like ISBN, author, publisher, year, and page count
 - 📍 **Location Tracking** - Organize books by physical location (shelves, rooms, etc.)
+- 📋 **API Info Viewer** - View additional book metadata as formatted JSON in a modal
 - 🔍 **Swagger API Documentation** - Interactive API exploration
 - 🐳 **Docker Support** - Easy deployment with Docker Compose
 - 🏗️ **Clean Architecture** - Maintainable and testable code structure
+- 📱 **Responsive Design** - Mobile-friendly layout with collapsible sidebar navigation
 
 ## Architecture
 
@@ -21,7 +23,42 @@ The solution follows Clean Architecture with the following projects:
 - **BookLibrary.Api** - ASP.NET Core Web API with controllers
 
 ### Frontend (Web)
-- **BookLibrary.Web** - Blazor Server application with interactive UI
+- **BookLibrary.Web** - Blazor Server application using Interactive Server rendering mode
+- **BookLibrary.Web.Client** - Blazor WebAssembly project (scaffolded for future use)
+
+## Frontend
+
+The frontend is a **Blazor Server** application that renders interactively on the server using SignalR. The browser never directly contacts the API — all HTTP calls to the backend are made server-side.
+
+### Pages
+
+| Route | Page | Description |
+|-------|------|-------------|
+| `/` | Home | Landing page with navigation cards linking to Books and Places |
+| `/books` | Books | Full book management — searchable table, collapsible add form with location dropdown, delete functionality, and API info modal |
+| `/places` | Places | Location management — table of places, collapsible add form, and delete functionality |
+
+### UI & Styling
+
+- **Bootstrap** — Bundled locally for layout, tables, forms, alerts, and modals
+- **Responsive sidebar** — Collapses to a hamburger menu on screens narrower than 641px
+- **Feedback messages** — Success and error alerts displayed after operations
+- **Loading states** — Shows loading indicators while fetching data
+
+### API Communication
+
+The frontend uses a named `HttpClient` registered via `IHttpClientFactory`:
+
+```csharp
+builder.Services.AddHttpClient("BookLibraryApi", client =>
+{
+    client.BaseAddress = new Uri(builder.Configuration["ApiBaseUrl"]);
+});
+```
+
+- In Docker: the `ApiBaseUrl` is set to `http://api:8080` (internal container DNS)
+- Locally: defaults to `http://localhost:8080`
+- Pages inject `HttpClient` and call REST endpoints (`/api/books`, `/api/places`) using `GetFromJsonAsync`, `PostAsJsonAsync`, and `DeleteAsync`
 
 ## Prerequisites
 
