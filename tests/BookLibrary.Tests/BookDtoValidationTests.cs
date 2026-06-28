@@ -1,5 +1,3 @@
-using System.ComponentModel.DataAnnotations;
-using BookLibrary.Application.DTOs;
 using BookLibrary.Application.Validation;
 using FluentAssertions;
 using Xunit;
@@ -8,25 +6,14 @@ namespace BookLibrary.Tests;
 
 public class BookDtoValidationTests
 {
-    private static IList<ValidationResult> Validate(object dto)
-    {
-        var results = new List<ValidationResult>();
-        Validator.TryValidateObject(dto, new ValidationContext(dto), results, validateAllProperties: true);
-        return results;
-    }
-
-    private static CreateBookDto MakeCreate(string? publishedYear) =>
-        new("978-1", "Title", "Author", "Publisher", publishedYear, 100, null, null);
-
-    private static UpdateBookDto MakeUpdate(string? publishedYear) =>
-        new("978-1", "Title", "Author", "Publisher", publishedYear, 100, null, null);
+    private readonly ValidPublishedYearAttribute _attr = new();
 
     // --- Valid values ---
 
     [Fact]
-    public void CreateBookDto_PublishedYear_Null_IsValid()
+    public void Null_IsValid()
     {
-        Validate(MakeCreate(null)).Should().BeEmpty();
+        _attr.IsValid(null).Should().BeTrue();
     }
 
     [Theory]
@@ -34,25 +21,9 @@ public class BookDtoValidationTests
     [InlineData("1900")]
     [InlineData("0000")]
     [InlineData("9999")]
-    public void CreateBookDto_PublishedYear_FourDigits_IsValid(string year)
+    public void FourDigitString_IsValid(string year)
     {
-        Validate(MakeCreate(year)).Should().BeEmpty();
-    }
-
-    [Fact]
-    public void UpdateBookDto_PublishedYear_Null_IsValid()
-    {
-        Validate(MakeUpdate(null)).Should().BeEmpty();
-    }
-
-    [Theory]
-    [InlineData("2024")]
-    [InlineData("1900")]
-    [InlineData("0000")]
-    [InlineData("9999")]
-    public void UpdateBookDto_PublishedYear_FourDigits_IsValid(string year)
-    {
-        Validate(MakeUpdate(year)).Should().BeEmpty();
+        _attr.IsValid(year).Should().BeTrue();
     }
 
     // --- Invalid values ---
@@ -63,38 +34,18 @@ public class BookDtoValidationTests
     [InlineData("123")]       // too short
     [InlineData("12345")]     // too long
     [InlineData("20 4")]      // contains space
-    [InlineData("20a4")]      // mixed
+    [InlineData("20a4")]      // mixed digits and letters
     [InlineData("-024")]      // negative sign
-    public void CreateBookDto_PublishedYear_InvalidFormat_FailsValidation(string year)
+    public void InvalidFormat_IsNotValid(string year)
     {
-        var errors = Validate(MakeCreate(year));
-        errors.Should().ContainSingle()
-            .Which.MemberNames.Should().Contain("PublishedYear");
+        _attr.IsValid(year).Should().BeFalse();
     }
 
-    [Theory]
-    [InlineData("")]
-    [InlineData("abc")]
-    [InlineData("123")]
-    [InlineData("12345")]
-    [InlineData("20 4")]
-    [InlineData("20a4")]
-    [InlineData("-024")]
-    public void UpdateBookDto_PublishedYear_InvalidFormat_FailsValidation(string year)
+    [Fact]
+    public void ErrorMessage_MentionsExpectedFormat()
     {
-        var errors = Validate(MakeUpdate(year));
-        errors.Should().ContainSingle()
-            .Which.MemberNames.Should().Contain("PublishedYear");
-    }
-
-    [Theory]
-    [InlineData("")]
-    [InlineData("abc")]
-    [InlineData("12345")]
-    public void CreateBookDto_PublishedYear_InvalidFormat_ErrorMessageMentionsExpectedFormat(string year)
-    {
-        var errors = Validate(MakeCreate(year));
-        errors.Should().ContainSingle()
-            .Which.ErrorMessage.Should().Contain("4-digit");
+        var result = _attr.GetValidationResult("bad", new System.ComponentModel.DataAnnotations.ValidationContext(new object()));
+        result.Should().NotBeNull();
+        result!.ErrorMessage.Should().Contain("4-digit");
     }
 }

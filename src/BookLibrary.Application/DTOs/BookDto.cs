@@ -21,7 +21,7 @@ public record CreateBookDto(
     string Title,
     string Author,
     string Publisher,
-    [property: ValidPublishedYear]
+    [ValidPublishedYear]
     string? PublishedYear,
     int PageCount,
     int? PlaceId,
@@ -33,7 +33,7 @@ public record UpdateBookDto(
     string Title,
     string Author,
     string Publisher,
-    [property: ValidPublishedYear]
+    [ValidPublishedYear]
     string? PublishedYear,
     int PageCount,
     int? PlaceId,

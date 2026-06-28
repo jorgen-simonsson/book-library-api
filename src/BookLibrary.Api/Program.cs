@@ -29,9 +29,10 @@ builder.Services.AddInfrastructure(builder.Configuration);
 
 var app = builder.Build();
 
-// Apply migrations on startup
-using (var scope = app.Services.CreateScope())
+// Apply migrations on startup (skipped in integration test environment)
+if (!app.Environment.IsEnvironment("Testing"))
 {
+    using var scope = app.Services.CreateScope();
     var dbContext = scope.ServiceProvider.GetRequiredService<BookLibraryDbContext>();
     dbContext.Database.Migrate();
 }
@@ -49,3 +50,6 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
+
+// Needed by WebApplicationFactory<Program> in integration tests
+public partial class Program { }

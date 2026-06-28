@@ -3,7 +3,7 @@ using System.Text.RegularExpressions;
 
 namespace BookLibrary.Application.Validation;
 
-[AttributeUsage(AttributeTargets.Property)]
+[AttributeUsage(AttributeTargets.Property | AttributeTargets.Parameter)]
 public sealed class ValidPublishedYearAttribute : ValidationAttribute
 {
     private static readonly Regex FourDigitYear = new(@"^\d{4}$", RegexOptions.Compiled);
