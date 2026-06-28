@@ -4,6 +4,8 @@ WORKDIR /src
 
 # Copy solution and project files
 COPY BookLibrary.sln .
+COPY Directory.Build.props .
+COPY Directory.Packages.props .
 COPY src/BookLibrary.Domain/BookLibrary.Domain.csproj src/BookLibrary.Domain/
 COPY src/BookLibrary.Application/BookLibrary.Application.csproj src/BookLibrary.Application/
 COPY src/BookLibrary.Infrastructure/BookLibrary.Infrastructure.csproj src/BookLibrary.Infrastructure/

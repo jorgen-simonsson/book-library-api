@@ -3,6 +3,8 @@ FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
 # Copy solution and project files
+COPY Directory.Build.props .
+COPY Directory.Packages.props .
 COPY src/BookLibrary.Web/BookLibrary.Web.csproj src/BookLibrary.Web/
 
 # Restore dependencies
