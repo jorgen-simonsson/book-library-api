@@ -9,7 +9,7 @@ public class Book
     public string Title { get; set; } = string.Empty;
     public string Author { get; set; } = string.Empty;
     public string Publisher { get; set; } = string.Empty;
-    public string PublishedYear { get; set; } = string.Empty;
+    public string? PublishedYear { get; set; }
     public int PageCount { get; set; }
     public int? PlaceId { get; set; }
     public JsonDocument? ApiInfo { get; set; }

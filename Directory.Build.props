@@ -4,6 +4,11 @@
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <!-- System.Security.Cryptography.Xml is a transitive dep of EF Core Design tools (PrivateAssets=all,
+         never shipped in published output). No patched version exists yet for the .NET 10 ecosystem.
+         NuGetAuditSuppress does not propagate across project references, so suppress NU1903 directly. -->
+    <NuGetAuditSuppress>https://github.com/advisories/GHSA-37gx-xxp4-5rgx;https://github.com/advisories/GHSA-w3x6-4m5h-cxqf</NuGetAuditSuppress>
+    <NoWarn>$(NoWarn);NU1903</NoWarn>
   </PropertyGroup>
 
 </Project>

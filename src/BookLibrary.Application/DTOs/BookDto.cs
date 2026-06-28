@@ -1,4 +1,5 @@
 using System.Text.Json;
+using BookLibrary.Application.Validation;
 
 namespace BookLibrary.Application.DTOs;
 
@@ -8,7 +9,7 @@ public record BookDto(
     string Title,
     string Author,
     string Publisher,
-    string PublishedYear,
+    string? PublishedYear,
     int PageCount,
     int? PlaceId,
     JsonDocument? ApiInfo,
@@ -20,7 +21,8 @@ public record CreateBookDto(
     string Title,
     string Author,
     string Publisher,
-    string PublishedYear,
+    [property: ValidPublishedYear]
+    string? PublishedYear,
     int PageCount,
     int? PlaceId,
     JsonDocument? ApiInfo
@@ -31,7 +33,8 @@ public record UpdateBookDto(
     string Title,
     string Author,
     string Publisher,
-    string PublishedYear,
+    [property: ValidPublishedYear]
+    string? PublishedYear,
     int PageCount,
     int? PlaceId,
     JsonDocument? ApiInfo
