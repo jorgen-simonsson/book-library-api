@@ -120,9 +120,59 @@ book-library-api/
 │   ├── BookLibrary.Infrastructure/  # EF Core, repositories
 │   ├── BookLibrary.Api/             # REST API controllers
 │   └── BookLibrary.Web/             # Blazor Server frontend
+├── tests/
+│   └── BookLibrary.Tests/           # Unit tests (xUnit + Moq)
+├── scripts/
+│   ├── backup-postgres.sh           # Database backup script
+│   └── restore-postgres.sh          # Database restore script
 ├── compose.yaml                     # Docker Compose configuration
 └── BookLibrary.sln                  # Solution file
 ```
+
+## Testing
+
+Unit tests live in `tests/BookLibrary.Tests/` and use **xUnit**, **Moq**, and **FluentAssertions**.
+
+Run the full test suite:
+
+```bash
+dotnet test
+```
+
+### Coverage
+
+| Test class | Subject | Tests |
+|---|---|---|
+| `BookServiceTests` | `BookService` — all CRUD operations | 20 |
+| `PlaceServiceTests` | `PlaceService` — all CRUD operations | 18 |
+| `BooksControllerTests` | `BooksController` — HTTP status codes & response bodies | 10 |
+| `PlacesControllerTests` | `PlacesController` — HTTP status codes & response bodies | 8 |
+
+Each service test class covers: correct DTO mapping, not-found paths returning `null`, repository methods called with the right arguments, and `Update`/`Delete` never called when the entity doesn't exist.
+
+## Database Backup & Restore
+
+Two scripts in `scripts/` handle PostgreSQL backup and restore. Both work by running commands inside the running `db` container and fall back to a local `pg_dump`/`pg_restore` (via port 5433) if the container is not found.
+
+### Backup
+
+Creates a timestamped folder under `/srv/backups/postgres/` and writes a compressed custom-format dump:
+
+```bash
+sudo bash scripts/backup-postgres.sh
+```
+
+Output: `/srv/backups/postgres/backup_YYMMDD_HHMMSS/booklibrary.dump`
+
+### Restore
+
+Finds the latest backup folder automatically, then drops and recreates the `booklibrary` database before restoring:
+
+```bash
+sudo bash scripts/restore-postgres.sh
+```
+
+The script asks for confirmation before touching the database. `sudo` is required to read from `/srv/backups/postgres/` unless the directory is owned by your user.
 
 ## API Endpoints
 
